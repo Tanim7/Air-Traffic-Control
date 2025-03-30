@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Air Traffic Control</title>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+        th { background-color: #f4f4f4; }
+    </style>
+</head>
+<body>
+    <h1>Air Traffic Control Dashboard</h1>
+    <button onclick="spawnPlane()">Spawn Random Plane</button>
+    <table>
+        <thead>
+            <tr>
+                <th>Plane ID</th>
+                <th>Size</th>
+                <th>Status</th>
+                <th>Landing Runway</th>
+                <th>Gate</th>
+                <th>Departure Runway</th>
+            </tr>
+        </thead>
+        <tbody id="plane-table">
+        </tbody>
+    </table>
+
+    <script>
+        async function fetchPlanes() {
+            const res = await fetch("http://127.0.0.1:8000/planes/");
+            const data = await res.json();
+            const table = document.getElementById("plane-table");
+            table.innerHTML = "";
+
+            for (const id in data) {
+                const plane = data[id];
+                const row = `<tr>
+                    <td>${id}</td>
+                    <td>${plane.size}</td>
+                    <td>${plane.status}</td>
+                    <td>${plane.landing_runway}</td>
+                    <td>${plane.gate}</td>
+                    <td>${plane.departure_runway}</td>
+                </tr>`;
+                table.innerHTML += row;
+            }
+        }
+
+        async function spawnPlane() {
+            const plane_id = Math.floor(Math.random() * 9000 + 1000);
+            const size = Math.random() < 0.5 ? "Small" : "Large";
+            await fetch("http://127.0.0.1:8000/spawn_plane/", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({ plane_id, size })
+            });
+        }
+
+        // Refresh every 2 seconds
+        setInterval(fetchPlanes, 2000);
+        fetchPlanes();
+    </script>
+</body>
+</html>
