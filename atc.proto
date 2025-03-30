@@ -1,0 +1,47 @@
+syntax = "proto3";
+
+package atc;
+
+// Define messages for different requests
+message AirwayRequest {
+  string aircraft_id = 1;
+  int32 altitude = 2;
+  int32 distance = 3;
+  string airway = 4;
+}
+
+message RunwayRequest {
+  string aircraft_id = 1;
+  int32 duration = 2;
+  string runway = 3;
+}
+
+message GateRequest {
+  string aircraft_id = 1;
+  int32 duration = 2;
+}
+
+message AssignAircraftRequest {
+  string aircraft_id = 1;
+  string runway = 2;
+  string gate = 3;
+  string airspace = 4;
+}
+
+message Empty {}
+
+message Response {
+  string status = 1;
+  string message = 2;
+}
+
+// Define the ATC service
+service AirTrafficControl {
+  rpc IncomingAirway(AirwayRequest) returns (Response);
+  rpc DepartingAirway(AirwayRequest) returns (Response);
+  rpc LandingRunway(RunwayRequest) returns (Response);
+  rpc DepartingRunway(RunwayRequest) returns (Response);
+  rpc GateAssignment(GateRequest) returns (Response);
+  rpc AssignAircraft(AssignAircraftRequest) returns (Response);
+  rpc ReleaseRunways(Empty) returns (Response);
+}
