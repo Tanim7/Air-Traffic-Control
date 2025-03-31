@@ -69,9 +69,9 @@ Patrol_Rings = [
 
 # Airport gates
 Gates = [
-    Gate(0),
     Gate(1),
-    Gate(2)
+    Gate(2),
+    Gate(3)
 ]
 
 # The client should provide the information for the departing airways
@@ -142,7 +142,7 @@ def Track_Plane(PlaneX: Plane):
     PlaneX.Set_Flight_Plan(
         LandingRunwayID=random.choice([r.Runway_ID for r in Runways if r.Size == PlaneX.Size]),
         GateID=random.choice([g.Ring_ID for g in Gates]),
-        GateDelay=random.randint(10, 20),  # Short for test purposes
+        GateDelay=random.randint(20, 40),  # Short for test purposes
         DepartureRunwayID=random.choice([r.Runway_ID for r in Runways if r.Size == PlaneX.Size])
     )
 
@@ -161,7 +161,7 @@ def Track_Plane(PlaneX: Plane):
             "departure_runway": PlaneX.Planned_DepartureRunway_ID,
             "size": PlaneX.Size
         }
-        time.sleep(random.randint(1, 3))
+        time.sleep(random.randint(6, 9))
     else:
         PlaneX.Set_Status("Patrolling")
         ActivePlanes[PlaneX.Plane_ID] = {
@@ -188,7 +188,7 @@ def Track_Plane(PlaneX: Plane):
                     "size": PlaneX.Size
                 }
                 Patrolling_Planes.remove(PlaneX)
-                time.sleep(random.randint(1, 3))
+                time.sleep(random.randint(6, 9))
 
     Runways[index].Change_Available()
     print(f"[SERVER] Plane {PlaneX.Plane_ID} has landed.")
@@ -254,7 +254,7 @@ def Track_Plane(PlaneX: Plane):
     if indexDepartingRunway != 10000 and Runways[indexDepartingRunway].Available and len(Patrolling_Planes) == 0:
         print(f"[SERVER] Plane {PlaneX.Plane_ID} cleared to depart on Runway {Runways[indexDepartingRunway].Runway_ID}")
         Runways[indexDepartingRunway].Change_Unavailable()
-        time.sleep(random.randint(1, 3))
+        time.sleep(random.randint(6, 9))
         PlaneX.Set_Status("Departed")
         ActivePlanes[PlaneX.Plane_ID] = {
             "status": PlaneX.Current_Status,
@@ -274,7 +274,7 @@ def Track_Plane(PlaneX: Plane):
                 print(f"[SERVER] Plane {PlaneX.Plane_ID} departing after wait")
                 Runways[indexDepartingRunway].Change_Unavailable()
                 Taxi_Planes.remove(PlaneX)
-                time.sleep(random.randint(1, 3))
+                time.sleep(random.randint(6, 9))
                 PlaneX.Set_Status("Departed")
                 ActivePlanes[PlaneX.Plane_ID] = {
                     "status": PlaneX.Current_Status,
@@ -317,6 +317,42 @@ def spawn_plane(data: PlaneRequest):
 @app.get("/planes/")
 def get_active_planes():
     return ActivePlanes
+
+@app.get("/resources/")
+def get_resources():
+    # GATE STATUS
+    gate_data = []
+    for gate in Gates:
+        plane_id = None
+        for plane_id_key, plane in ActivePlanes.items():
+            if plane["gate"] == gate.Ring_ID and plane["status"] == "At_Gate":
+                plane_id = plane_id_key
+                break
+        gate_data.append({
+            "gate_id": gate.Ring_ID,
+            "available": gate.Available,
+            "plane_id": plane_id
+        })
+
+    # RUNWAY STATUS
+    runway_data = []
+    for runway in Runways:
+        plane_id = None
+        for plane_id_key, plane in ActivePlanes.items():
+            if (
+                (plane["landing_runway"] == runway.Runway_ID or plane["departure_runway"] == runway.Runway_ID)
+                and plane["status"] in ["Landing", "Departing"]
+            ):
+                plane_id = plane_id_key
+                break
+        runway_data.append({
+            "runway_id": runway.Runway_ID,
+            "size": runway.Size,
+            "available": runway.Available,
+            "plane_id": plane_id
+        })
+
+    return {"gates": gate_data, "runways": runway_data}
 
 # Goes in server
 if __name__ == "__main__":

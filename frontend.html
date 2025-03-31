@@ -1,66 +1,296 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Air Traffic Control</title>
-    <style>
-        body { font-family: Arial; padding: 20px; }
-        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
-        th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
-        th { background-color: #f4f4f4; }
-    </style>
+  <meta charset="UTF-8" />
+  <title>Air Traffic Control</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f6f8;
+      color: #333;
+    }
+
+    h1 {
+      text-align: center;
+      margin: 30px 0 10px;
+      font-size: 2rem;
+      color: #1976d2;
+    }
+
+    h3 {
+      margin-top: 40px;
+      color: #444;
+    }
+
+    .nav {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .nav button {
+      padding: 10px 24px;
+      border: none;
+      background-color: #1976d2;
+      color: white;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background-color 0.2s;
+    }
+
+    .nav button:hover {
+      background-color: #155a9c;
+    }
+
+    .nav button.active {
+      background-color: #0d47a1;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: auto;
+      background-color: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    }
+
+    #spawn-btn {
+      background-color: #43a047;
+      border: none;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-bottom: 20px;
+      font-size: 14px;
+    }
+
+    #spawn-btn:hover {
+      background-color: #388e3c;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    th, td {
+      padding: 12px;
+      border-bottom: 1px solid #e0e0e0;
+      text-align: center;
+    }
+
+    th {
+      background-color: #e3f2fd;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    tr:hover {
+      background-color: #f1f1f1;
+    }
+
+    .status-Landing { color: #2e7d32; font-weight: bold; }
+    .status-At_Gate { color: #1565c0; font-weight: bold; }
+    .status-Departing { color: #ef6c00; font-weight: bold; }
+    .status-Departed { color: #616161; font-weight: bold; }
+    .status-Patrolling { color: #c62828; font-weight: bold; }
+
+    #logs {
+      max-height: 400px;
+      overflow-y: auto;
+      background-color: #212121;
+      color: #d1d1d1;
+      font-family: monospace;
+      font-size: 13px;
+      padding: 12px;
+      border-radius: 6px;
+      border: 1px solid #444;
+    }
+
+    #logs p {
+      margin: 0;
+      padding: 4px 0;
+      border-bottom: 1px solid #333;
+    }
+  </style>
 </head>
 <body>
-    <h1>Air Traffic Control Dashboard</h1>
-    <button onclick="spawnPlane()">Spawn Random Plane</button>
-    <table>
+  <h1>Air Traffic Control System</h1>
+
+  <div class="nav">
+    <button class="active" onclick="showTab('dashboard')">Dashboard</button>
+    <button onclick="showTab('logs')">Logs</button>
+  </div>
+
+  <div class="container">
+    <!-- Dashboard Tab -->
+    <div id="dashboard-tab">
+      <button id="spawn-btn" onclick="spawnPlane()"> Spawn Random Plane</button>
+
+      <!-- Plane Table -->
+      <table>
         <thead>
-            <tr>
-                <th>Plane ID</th>
-                <th>Size</th>
-                <th>Status</th>
-                <th>Landing Runway</th>
-                <th>Gate</th>
-                <th>Departure Runway</th>
-            </tr>
+          <tr>
+            <th>Plane ID</th>
+            <th>Size</th>
+            <th>Status</th>
+            <th>Landing Runway</th>
+            <th>Gate</th>
+            <th>Departure Runway</th>
+          </tr>
         </thead>
-        <tbody id="plane-table">
-        </tbody>
-    </table>
+        <tbody id="plane-table"></tbody>
+      </table>
 
-    <script>
-        async function fetchPlanes() {
-            const res = await fetch("http://127.0.0.1:8000/planes/");
-            const data = await res.json();
-            const table = document.getElementById("plane-table");
-            table.innerHTML = "";
+      <!-- Gates -->
+      <h3>Gate Status</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Gate ID</th>
+            <th>Status</th>
+            <th>Occupied By</th>
+          </tr>
+        </thead>
+        <tbody id="gate-table"></tbody>
+      </table>
 
-            for (const id in data) {
-                const plane = data[id];
-                const row = `<tr>
-                    <td>${id}</td>
-                    <td>${plane.size}</td>
-                    <td>${plane.status}</td>
-                    <td>${plane.landing_runway}</td>
-                    <td>${plane.gate}</td>
-                    <td>${plane.departure_runway}</td>
-                </tr>`;
-                table.innerHTML += row;
-            }
+      <!-- Runways -->
+      <h3>Runway Status</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Runway ID</th>
+            <th>Size</th>
+            <th>Status</th>
+            <th>Occupied By</th>
+          </tr>
+        </thead>
+        <tbody id="runway-table"></tbody>
+      </table>
+    </div>
+
+    <!-- Logs Tab -->
+    <div id="logs-tab" style="display: none;">
+      <div id="logs"></div>
+    </div>
+  </div>
+
+  <script>
+    let previousStatuses = {};
+
+    function showTab(tab) {
+      document.getElementById("dashboard-tab").style.display = (tab === "dashboard") ? "block" : "none";
+      document.getElementById("logs-tab").style.display = (tab === "logs") ? "block" : "none";
+
+      document.querySelectorAll('.nav button').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.nav button').forEach(btn => {
+        if (btn.innerText.toLowerCase().includes(tab)) btn.classList.add('active');
+      });
+    }
+
+    async function fetchPlanes() {
+      try {
+        const res = await fetch("http://127.0.0.1:8000/planes/");
+        const data = await res.json();
+        const table = document.getElementById("plane-table");
+        table.innerHTML = "";
+
+        for (const id in data) {
+          const plane = data[id];
+          const statusClass = "status-" + plane.status.replace(/\s/g, "_");
+
+          if (!previousStatuses[id] || previousStatuses[id] !== plane.status) {
+            logUpdate(` Plane ${id} → "${plane.status}"`);
+            previousStatuses[id] = plane.status;
+          }
+
+          const row = `
+            <tr>
+              <td>${id}</td>
+              <td>${plane.size}</td>
+              <td class="${statusClass}">${plane.status}</td>
+              <td>${plane.landing_runway}</td>
+              <td>${plane.gate}</td>
+              <td>${plane.departure_runway}</td>
+            </tr>`;
+          table.innerHTML += row;
         }
+      } catch (e) {
+        console.error("Error fetching planes:", e);
+      }
+    }
 
-        async function spawnPlane() {
-            const plane_id = Math.floor(Math.random() * 9000 + 1000);
-            const size = Math.random() < 0.5 ? "Small" : "Large";
-            await fetch("http://127.0.0.1:8000/spawn_plane/", {
-                method: "POST",
-                headers: {"Content-Type": "application/json"},
-                body: JSON.stringify({ plane_id, size })
-            });
-        }
+    async function fetchResources() {
+      try {
+        const res = await fetch("http://127.0.0.1:8000/resources/");
+        const data = await res.json();
 
-        // Refresh every 2 seconds
-        setInterval(fetchPlanes, 2000);
-        fetchPlanes();
-    </script>
+        // Gates
+        const gateTable = document.getElementById("gate-table");
+        gateTable.innerHTML = "";
+        data.gates.forEach(gate => {
+          gateTable.innerHTML += `
+            <tr>
+              <td>${gate.gate_id}</td>
+              <td style="color:${gate.available ? 'green' : 'red'}">
+                ${gate.available ? 'Available' : 'Occupied'}
+              </td>
+              <td>${gate.plane_id || '-'}</td>
+            </tr>`;
+        });
+
+        // Runways
+        const runwayTable = document.getElementById("runway-table");
+        runwayTable.innerHTML = "";
+        data.runways.forEach(runway => {
+          runwayTable.innerHTML += `
+            <tr>
+              <td>${runway.runway_id}</td>
+              <td>${runway.size}</td>
+              <td style="color:${runway.available ? 'green' : 'red'}">
+                ${runway.available ? 'Available' : 'Occupied'}
+              </td>
+              <td>${runway.plane_id || '-'}</td>
+            </tr>`;
+        });
+      } catch (err) {
+        console.error("Failed to fetch resources:", err);
+      }
+    }
+
+    function logUpdate(msg) {
+      const logContainer = document.getElementById("logs");
+      const entry = document.createElement("p");
+      entry.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+      logContainer.prepend(entry);
+    }
+
+    async function spawnPlane() {
+      const plane_id = Math.floor(Math.random() * 9000 + 1000);
+      const size = Math.random() < 0.5 ? "Small" : "Large";
+      await fetch("http://127.0.0.1:8000/spawn_plane/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plane_id, size })
+      });
+      logUpdate(` Spawned new plane ${plane_id} (${size})`);
+    }
+
+    setInterval(() => {
+      fetchPlanes();
+      fetchResources();
+    }, 2000);
+
+    fetchPlanes();
+    fetchResources();
+  </script>
 </body>
 </html>
