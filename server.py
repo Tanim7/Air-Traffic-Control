@@ -5,8 +5,10 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 import uvicorn
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 
 ActivePlanes = {}
+
 
 # Goes in server
 class Plane:
@@ -293,6 +295,11 @@ def New_Plane(PlaneX: Plane):
 
 # FastAPI setup for communication with Radar
 app = FastAPI()
+
+@app.get("/", response_class=HTMLResponse)
+async def root():
+    with open("frontend.html", "r") as f:
+        return f.read()
 
 app.add_middleware(
     CORSMiddleware,
